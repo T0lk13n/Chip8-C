@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "raylib.h"
 #include "chip8.h"
 
@@ -19,12 +20,20 @@ int main(void)
     struct chip8_t* chip8 = (struct chip8_t*)malloc(sizeof(struct chip8_t));
 
     initChip8(chip8);
+    loadRom(chip8, "tests/test_opcode.ch8");
 
     //--------------------------------------------------------------------------------------
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         // Update
+        if (IsFileDropped())
+        {
+            FilePathList dropedFiles = LoadDroppedFiles();
+            loadRom(chip8, dropedFiles.paths[0]);
+            printf("%s\n", dropedFiles.paths[0]);
+            UnloadDroppedFiles(dropedFiles);
+        }
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -81,7 +90,20 @@ void initChip8(struct chip8_t* chip8)
 
 }
 
-void loadRom(const char* filename)
+void loadRom(struct chip8_t *chip8,  const char* filename)
 {
     //carga la rom en memoria a partir de MEM_PROGRAM_START
+    if(FileExists(filename))
+    {
+        int fileSize = GetFileLength(filename);
+        // chip8->mem = LoadFileData(filename, fileSize);
+        FILE* file = fopen(filename, "rb");
+        
+        //errno_t  err = fopen_s(&file, filename, "Rb");
+        for (int i = 0; i < fileSize; i++)
+        {
+            chip8->mem[MEM_PROGRAM_START + i] = fgetc(file);
+        }
+    }
+
 }

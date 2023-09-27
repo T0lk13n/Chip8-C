@@ -1,5 +1,4 @@
 #pragma once
-
 #define screenW 64
 #define screenH 32 
 #define MEM_SIZE 4096
@@ -32,6 +31,7 @@ unsigned char fonts [16][5] =
 };
 
 
+// Maquina a 500-600 Hz. Hay que limitar la velocidad a unos 10 opcodes por frame
 struct chip8_t
 {
 	unsigned char  mem[MEM_SIZE];	//memoria
@@ -45,4 +45,4 @@ struct chip8_t
 };
 
 void initChip8(struct chip8_t *chip8);
-void loadRom(const char* filename);
+void loadRom(struct chip8_t *chip8, const char* filename);
