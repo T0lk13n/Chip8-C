@@ -5,6 +5,10 @@
 #define MEM_PROGRAM_START 0x200
 #define FONTS_ADDR 0
 #define FONTS_SIZE 5*16
+#define OPCODESPERFRAME 10
+#define PC chip8->pc
+#define SP chip8->sp
+#define CURRENTOPCODE (chip8->mem[PC] << 8 | chip8->mem[PC+1])
 
 
 // *************************************************
@@ -44,5 +48,17 @@ struct chip8_t
 	unsigned short sp;				//stack pointer
 };
 
+struct opcode_t
+{
+	unsigned short	instruction;
+	unsigned char	x;
+	unsigned char	y;
+	unsigned char	n;
+	unsigned char	nn;
+	unsigned short	nnn;
+};
+
 void initChip8(struct chip8_t *chip8);
 void loadRom(struct chip8_t *chip8, const char* filename);
+void getOpcode(struct chip8_t *chip8, struct opcode_t *opcode);
+void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode);
