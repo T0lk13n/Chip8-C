@@ -24,8 +24,6 @@ int main(void)
 	loadRom(chip8, "tests/test_opcode.ch8");
 
 
-
-
 	//--------------------------------------------------------------------------------------
 	// Main game loop
 	while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -228,8 +226,134 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			// Set Vx = Vx + nn.
 			// Adds the value nn to the value of register Vx, then stores the result in Vx.
 			chip8->v[opcode->x] += opcode->nn;
-			break:
+			break;
 
 		case 8:
+			switch (opcode->n)
+			{
+				case 0:
+					// Set Vx = Vy.
+					// Stores the value of register Vy in register Vx.
+					chip8->v[opcode->x] = chip8->v[opcode->y];
+					break;
+
+				case 1:
+					// Set Vx = Vx OR Vy.
+					// Performs a bitwise OR on the values of Vx and Vy, 
+					// then stores the result in Vx.A bitwise OR compares the corrseponding bits from two values, 
+					// and if either bit is 1, then the same bit in the result is also 1. Otherwise, it is 0.
+					chip8->v[opcode->x] = chip8->v[opcode->x] | chip8->v[opcode->y];
+					break;
+
+				case 2:
+					// Set Vx = Vx AND Vy.
+					// Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx.
+					// A bitwise AND compares the corrseponding bits from two values, and if both bits are 1, 
+					// then the same bit in the result is also 1. Otherwise, it is 0.
+					chip8->v[opcode->x] = chip8->v[opcode->x] & chip8->v[opcode->y];
+					break;
+
+				case 3:
+					// Set Vx = Vx XOR Vy.
+					// Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx.
+					// An exclusive OR compares the corrseponding bits from two values, and if the bits are not both the same, 
+					// then the corresponding bit in the result is set to 1. Otherwise, it is 0.
+					chip8->v[opcode->x] = chip8->v[opcode->x] ^ chip8->v[opcode->y];
+					break;
+				
+				case 4:
+					// Set Vx = Vx + Vy, set VF = carry.
+					// The values of Vx and Vy are added together.If the result is greater than 8 bits(i.e., > 255, ) VF is set to 1, otherwise 0. 
+					// Only the lowest 8 bits of the result are kept, and stored in Vx.
+					{
+						int overflow = chip8->v[opcode->x] + chip8->v[opcode->y];
+						if (overflow > 255)
+							chip8->v[15] = 1;
+						else
+							chip8->v[15] = 0;
+						break;
+					}
+
+				case 5:
+					// Set Vx = Vx - Vy, set VF = NOT borrow.
+					// If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
+					if (chip8->v[opcode->x] > chip8->v[opcode->y])
+						chip8->v[15] = 1;
+					else
+						chip8->v[15] = 0;
+					chip8->v[opcode->x] -= chip8->v[opcode->y];
+					break;
+
+				case 6:
+					// Set Vx = Vx SHR 1.
+					// If the least - significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
+					if (chip8->v[opcode->x] & 1 == 1)
+						chip8->v[15] = 1;
+					else
+						chip8->v[15] = 0;
+					chip8->v[opcode->x] /= 2;
+
+				case 7:
+					// Set Vx = Vy - Vx, set VF = NOT borrow.
+					// If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+					if (chip8->v[opcode->y] > chip8->v[opcode->x])
+						chip8->v[15] = 1;
+					else
+						chip8->v[15] = 0;
+					chip8->v[opcode->x] = chip8->v[opcode->y] - chip8->v[opcode->x];
+					break;
+
+				case 14:  //E
+					// Set Vx = Vx SHL 1.
+					// If the most - significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
+					if (chip8->v[opcode->x] & 0b10000000 == 0b10000000)
+						chip8->v[15] = 1;
+					else
+						chip8->v[15] = 0;
+					chip8->v[opcode->x] *= 2;
+					break;
+			}
+	
+		case 9:
+			// Skip next instruction if Vx != Vy.
+			// The values of Vx and Vy are compared, and if they are not equal, the program counter is increased by 2.
+			if (chip8->v[opcode->x] != chip8->v[opcode->y])
+				PC += 2;
+			break;
+
+		case 10: //A
+			// Set I = nnn.
+			// The value of register I is set to nnn.
+			chip8->I = opcode->nnn;
+			break;
+
+		case 11: //B
+			// Jump to location nnn + V0.
+			// The program counter is set to nnn plus the value of V0.
+			PC = opcode->nnn + chip8->v[0];
+			break;
+	
+		case 12: //C
+			//Set Vx = random byte AND kk.
+			// The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk.The results are stored in Vx.
+			// See instruction 8xy2 for more information on AND.
+			
+			break;
+
+		case 13: //D
+			// Display n - byte sprite starting at memory location I at(Vx, Vy), set VF = collision.
+			// The interpreter reads n bytes from memory, starting at the address stored in I.These bytes are then displayed as sprites on screen at coordinates(Vx, Vy).Sprites are XORed onto the existing screen.If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0. 
+			// If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen.
+			// See instruction 8xy3 for more information on XOR, and section 2.4, Display, for more information on the Chip - 8 screen and sprites.
+	
+			break;
+
+		case 14: //E
+
+			break;
+
+		case 15: //F
+
+			break;
 	}
 }
