@@ -12,8 +12,8 @@ int main(void)
 
 	// Initialization
 	//--------------------------------------------------------------------------------------
-	const int screenWidth  = screenW *10;
-	const int screenHeight = screenH *10;
+	const int screenWidth  = screenW * fontSize;
+	const int screenHeight = screenH * fontSize;
 	InitWindow(screenWidth, screenHeight, "Chip 8 emulator");
 	ClearBackground(BLACK);
 	SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
@@ -22,12 +22,12 @@ int main(void)
 	struct opcode_t* opcode= (struct opcode_t*)malloc(sizeof(struct opcode_t));
 
 	initChip8(chip8);
-	loadRom(chip8, "tests/test_opcode.ch8");
+	//loadRom(chip8, "tests/test_opcode.ch8");
 	 //loadRom(chip8, "tests/sctest.ch8");
 	//loadRom(chip8, "tests/c8_test.ch8");
 	//loadRom(chip8, "chip8-roms/games/airplane.ch8");
-	 //loadRom(chip8, "chip8-roms/games/cave.ch8");
-	//loadRom(chip8, "chip8-roms/programs/ibm logo.ch8");
+	//loadRom(chip8, "chip8-roms/games/cave.ch8");
+	loadRom(chip8, "chip8-roms/programs/ibm logo.ch8");
 
 	//--------------------------------------------------------------------------------------
 	// Main game loop
@@ -79,6 +79,18 @@ int main(void)
 		//----------------------------------------------------------------------------------
 		BeginDrawing();
 		//ClearBackground(BLACK);
+
+		// Volcamos buffer
+		for (int y = 0; y < screenH; y++)
+		{
+			for (int x = 0; x < screenW; x++)
+			{
+				if (buffer[x][y] == 1)
+					//DrawPixel(x, y, WHITE);
+					DrawRectangle((x * fontSize), (y * fontSize), fontSize, fontSize, WHITE);
+			}
+		}
+
 
 		EndDrawing();
 		//----------------------------------------------------------------------------------
@@ -359,21 +371,23 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			// If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen.
 			// See instruction 8xy3 for more information on XOR, and section 2.4, Display, for more information on the Chip - 8 screen and sprites.
 			{
+				chip8->v[15] = 0;
 				int mask = 128; //1000 0000 en binario
-				int x = chip8->v[opcode->x] * fontSize;
-				int y = chip8->v[opcode->y] * fontSize;
+				//int x = chip8->v[opcode->x] * fontSize;
+				//int y = chip8->v[opcode->y] * fontSize;
+				int px = chip8->v[opcode->x];
+				int py = chip8->v[opcode->y];
 
-				//printf("x: %d\n y: %d\n", x, y);
-
-				for (int i = 0; i < opcode->n; i++)
+				for (int y = 0; y < opcode->n; y++)
 				{
-					for (int j = 0; j < 8; j++)
+					for (int x = 0; x < 8; x++)
 					{
-						if ((chip8->mem[chip8->I + i]) & mask)
-							DrawRectangle(x+(j*fontSize), y+(i*fontSize), fontSize, fontSize, WHITE);
-							//DrawPixel(chip8->v[opcode->x]+j, chip8->v[opcode->y]+i, WHITE);
-							//DrawRectangle(x, y, 10, 10, WHITE)
-							mask = mask >> 1;
+						if((chip8->mem[chip8->I + y] & mask) == mask)
+							buffer[px + x][py + y] = 1;
+						else
+							buffer[px + x][py + y] = 0;
+						mask = mask >> 1;
+				
 					}
 					mask = 128;
 				}
@@ -421,7 +435,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					// Set I = location of sprite for digit Vx.
 					// The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
 					// See section 2.4, Display, for more information on the Chip - 8 hexadecimal font.
-					chip8->I = chip8->v[opcode->x];
+					chip8->I = chip8->v[opcode->x] & 0x0f;
 					break;
 
 				case 51: //33
@@ -433,7 +447,6 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				case 85: //55
 					// Store registers V0 through Vx in memory starting at location I.
 					// The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
-					
 					for (int i = 0; i < opcode->x; i++)
 						chip8->mem[chip8->I+i] = chip8->v[i];
 					break;

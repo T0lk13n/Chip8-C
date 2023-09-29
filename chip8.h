@@ -11,6 +11,8 @@
 #define CURRENTOPCODE (chip8->mem[PC] << 8 | chip8->mem[PC+1])
 
 int fontSize = 4;
+// buffer pintado
+char buffer[64][32];
 
 // *************************************************
 //	Internal Font data	8x5 pixeles
