@@ -15,14 +15,19 @@ int main(void)
 	const int screenWidth  = screenW *10;
 	const int screenHeight = screenH *10;
 	InitWindow(screenWidth, screenHeight, "Chip 8 emulator");
+	ClearBackground(BLACK);
 	SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 
 	struct chip8_t*  chip8 = (struct chip8_t*) malloc(sizeof(struct  chip8_t));
 	struct opcode_t* opcode= (struct opcode_t*)malloc(sizeof(struct opcode_t));
 
 	initChip8(chip8);
-	loadRom(chip8, "tests/test_opcode.ch8");
-
+	//loadRom(chip8, "tests/test_opcode.ch8");
+	// loadRom(chip8, "tests/sctest.ch8");
+	//loadRom(chip8, "tests/c8_test.ch8");
+	//loadRom(chip8, "chip8-roms/games/airplane.ch8");
+	// loadRom(chip8, "chip8-roms/games/cave.ch8");
+	loadRom(chip8, "chip8-roms/programs/ibm logo.ch8");
 
 	//--------------------------------------------------------------------------------------
 	// Main game loop
@@ -31,6 +36,8 @@ int main(void)
 		// Update
 		if (IsFileDropped())
 		{
+			ClearBackground(BLACK);
+			initChip8(chip8);
 			FilePathList dropedFiles = LoadDroppedFiles();
 			loadRom(chip8, dropedFiles.paths[0]);
 			UnloadDroppedFiles(dropedFiles);
@@ -158,15 +165,6 @@ void getOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 
 void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 {
-	/*  PARA EMPEZAR
-
-		00E0 (clear screen)
-		1NNN(jump)
-		6XNN(set register VX)
-		7XNN(add value to register VX)
-		ANNN(set index register I)
-		DXYN(display / draw)
-	*/
 	switch (opcode->instruction)
 	{
 		case 0:
@@ -287,7 +285,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				case 6:
 					// Set Vx = Vx SHR 1.
 					// If the least - significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
-					if (chip8->v[opcode->x] & 1 == 1)
+					if ((chip8->v[opcode->x] & 1) == 1)
 						chip8->v[15] = 1;
 					else
 						chip8->v[15] = 0;
@@ -306,7 +304,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				case 14:  //E
 					// Set Vx = Vx SHL 1.
 					// If the most - significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
-					if (chip8->v[opcode->x] & 0b10000000 == 0b10000000)
+					if ((chip8->v[opcode->x] & 0b10000000) == 0b10000000)
 						chip8->v[15] = 1;
 					else
 						chip8->v[15] = 0;
@@ -342,17 +340,92 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 
 		case 13: //D
 			// Display n - byte sprite starting at memory location I at(Vx, Vy), set VF = collision.
-			// The interpreter reads n bytes from memory, starting at the address stored in I.These bytes are then displayed as sprites on screen at coordinates(Vx, Vy).Sprites are XORed onto the existing screen.If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0. 
+			// The interpreter reads n bytes from memory, starting at the address stored in I.These bytes are then displayed as sprites on screen at coordinates(Vx, Vy).
+			// Sprites are XORed onto the existing screen.If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0. 
 			// If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen.
 			// See instruction 8xy3 for more information on XOR, and section 2.4, Display, for more information on the Chip - 8 screen and sprites.
-	
-			break;
+			{
+				printf("I: %d\n", chip8->I);
+				int mask = 128; //1000 0000 en binario
+				for (int i = 0; i < opcode->n; i++)
+				{
+					for (int j = 0; j < 8; j++)
+					{
+						if(chip8->mem[chip8->I+i] & mask)
+							//DrawRectangle(chip8->v[opcode->x]*10, chip8->v[opcode->y]*10, 10, 10, WHITE);
+							DrawPixel(chip8->v[opcode->x]+j, chip8->v[opcode->y]+i, WHITE);
+						mask = mask >> 1;
+					}
+					mask = 128;
+				}
+				break;
+			}
 
 		case 14: //E
 
 			break;
 
 		case 15: //F
+
+			switch (opcode->nn)
+			{
+				case 07:
+					//Set Vx = delay timer value.	
+					//The value of DT is placed into Vx.
+					chip8->v[opcode->x] = chip8->delayTimer;
+					break;
+
+				case 10: //0A
+					// Wait for a key press, store the value of the key in Vx.
+					// All execution stops until a key is pressed, then the value of that key is stored in Vx.
+					break;
+
+				case 21: //15
+					// Set delay timer = Vx.
+					// DT is set equal to the value of Vx.
+					chip8->delayTimer = chip8->v[opcode->x];
+					break;
+
+				case 24: //18
+					// Set sound timer = Vx.
+					// ST is set equal to the value of Vx.
+					chip8->soundTimer = chip8->v[opcode->x];
+					break;
+
+				case 30: //1E
+					// Set I = I + Vx.
+					// The values of I and Vx are added, and the results are stored in I.
+					chip8->I += chip8->v[opcode->x];
+					break;
+
+				case 41: //29
+					// Set I = location of sprite for digit Vx.
+					// The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
+					// See section 2.4, Display, for more information on the Chip - 8 hexadecimal font.
+					chip8->I = chip8->v[opcode->x];
+					break;
+
+				case 51: //33
+					// Store BCD representation of Vx in memory locations I, I + 1, and I + 2.
+					// The interpreter takes the decimal value of Vx,
+					// and places the hundreds digit in memory at location in I, the tens digit at location I + 1, and the ones digit at location I + 2.
+					break;
+
+				case 85: //55
+					// Store registers V0 through Vx in memory starting at location I.
+					// The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
+					
+					for (int i = 0; i < opcode->x; i++)
+						chip8->mem[chip8->I+i] = chip8->v[i];
+					break;
+				
+				case 101: //65
+					// Read registers V0 through Vx from memory starting at location I.
+					// The interpreter reads values from memory starting at location I into registers V0 through Vx.
+					for (int i = 0; i < opcode->x; i++)
+						chip8->v[i] = chip8->mem[chip8->I + i];
+					break;
+			}
 
 			break;
 	}

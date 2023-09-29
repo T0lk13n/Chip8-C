@@ -3,7 +3,7 @@
 #define screenH 32 
 #define MEM_SIZE 4096
 #define MEM_PROGRAM_START 0x200
-#define FONTS_ADDR 0
+#define FONTS_ADDR 0x50
 #define FONTS_SIZE 5*16
 #define OPCODESPERFRAME 10
 #define PC chip8->pc
