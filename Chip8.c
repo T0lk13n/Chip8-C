@@ -22,12 +22,12 @@ int main(void)
 	struct opcode_t* opcode= (struct opcode_t*)malloc(sizeof(struct opcode_t));
 
 	initChip8(chip8);
-	//loadRom(chip8, "tests/test_opcode.ch8");
-	// loadRom(chip8, "tests/sctest.ch8");
+	loadRom(chip8, "tests/test_opcode.ch8");
+	 //loadRom(chip8, "tests/sctest.ch8");
 	//loadRom(chip8, "tests/c8_test.ch8");
 	//loadRom(chip8, "chip8-roms/games/airplane.ch8");
-	// loadRom(chip8, "chip8-roms/games/cave.ch8");
-	loadRom(chip8, "chip8-roms/programs/ibm logo.ch8");
+	 //loadRom(chip8, "chip8-roms/games/cave.ch8");
+	//loadRom(chip8, "chip8-roms/programs/ibm logo.ch8");
 
 	//--------------------------------------------------------------------------------------
 	// Main game loop
@@ -42,6 +42,21 @@ int main(void)
 			loadRom(chip8, dropedFiles.paths[0]);
 			UnloadDroppedFiles(dropedFiles);
 		}
+
+		//ZOOM
+		if (IsKeyPressed(KEY_Z))
+		{
+			fontSize--;
+			if (fontSize < 1) fontSize = 1;
+			puts("z");
+		}
+		else if (IsKeyPressed(KEY_X))
+		{
+			fontSize++;
+			if (fontSize > 8) fontSize = 8;
+			puts("x");
+		}
+
 
 		int numOpcodes = 0;
 		while (numOpcodes < OPCODESPERFRAME)
@@ -63,9 +78,7 @@ int main(void)
 		// Draw
 		//----------------------------------------------------------------------------------
 		BeginDrawing();
-
 		//ClearBackground(BLACK);
-
 
 		EndDrawing();
 		//----------------------------------------------------------------------------------
@@ -269,6 +282,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 							chip8->v[15] = 1;
 						else
 							chip8->v[15] = 0;
+						chip8->v[opcode->x] = overflow & 0xff;
 						break;
 					}
 
@@ -345,16 +359,21 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			// If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen.
 			// See instruction 8xy3 for more information on XOR, and section 2.4, Display, for more information on the Chip - 8 screen and sprites.
 			{
-				printf("I: %d\n", chip8->I);
 				int mask = 128; //1000 0000 en binario
+				int x = chip8->v[opcode->x] * fontSize;
+				int y = chip8->v[opcode->y] * fontSize;
+
+				//printf("x: %d\n y: %d\n", x, y);
+
 				for (int i = 0; i < opcode->n; i++)
 				{
 					for (int j = 0; j < 8; j++)
 					{
-						if(chip8->mem[chip8->I+i] & mask)
-							//DrawRectangle(chip8->v[opcode->x]*10, chip8->v[opcode->y]*10, 10, 10, WHITE);
-							DrawPixel(chip8->v[opcode->x]+j, chip8->v[opcode->y]+i, WHITE);
-						mask = mask >> 1;
+						if ((chip8->mem[chip8->I + i]) & mask)
+							DrawRectangle(x+(j*fontSize), y+(i*fontSize), fontSize, fontSize, WHITE);
+							//DrawPixel(chip8->v[opcode->x]+j, chip8->v[opcode->y]+i, WHITE);
+							//DrawRectangle(x, y, 10, 10, WHITE)
+							mask = mask >> 1;
 					}
 					mask = 128;
 				}
