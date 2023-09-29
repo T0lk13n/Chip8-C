@@ -36,7 +36,6 @@ int main(void)
 		// Update
 		if (IsFileDropped())
 		{
-			ClearBackground(BLACK);
 			initChip8(chip8);
 			FilePathList dropedFiles = LoadDroppedFiles();
 			loadRom(chip8, dropedFiles.paths[0]);
@@ -48,13 +47,15 @@ int main(void)
 		{
 			fontSize--;
 			if (fontSize < 1) fontSize = 1;
-			puts("z");
+			SetWindowSize(screenW * fontSize, screenH * fontSize);
+			// puts("z");
 		}
 		else if (IsKeyPressed(KEY_X))
 		{
 			fontSize++;
-			if (fontSize > 8) fontSize = 8;
-			puts("x");
+			if (fontSize > 10) fontSize = 10;
+			SetWindowSize(screenW * fontSize, screenH * fontSize);
+			//puts("x");
 		}
 
 
@@ -111,6 +112,18 @@ int main(void)
 
 void initChip8(struct chip8_t* chip8)
 {
+	ClearBackground(BLACK);
+
+	// Clear buffer
+	for (int y = 0; y < screenH; y++)
+	{
+		for (int x = 0; x < screenW; x++)
+		{
+			buffer[x][y] = 0;
+			DrawRectangle((x * fontSize), (y * fontSize), fontSize, fontSize, BLACK);
+		}
+	}
+	
 	// Clear Ram
 	for (unsigned int i = 0; i < MEM_SIZE; i++)
 		chip8->mem[i] = 0;
