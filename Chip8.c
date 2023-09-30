@@ -1,9 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include "raylib.h"
 #include "chip8.h"
-
-
 
 
 int main(void)
@@ -175,7 +170,9 @@ void loadRom(struct chip8_t *chip8,  const char* filename)
 	}
 }
 
-
+/*
+				GET OPCODE
+*/
 void getOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 {
 	// Se descompone asi
@@ -204,6 +201,9 @@ void getOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 }
 
 
+/*
+				DECODE OPCODE
+*/
 void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 {
 	switch (opcode->instruction)
@@ -220,7 +220,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 						buffer[x][y] = 0;					
 					}
 				}
-			else
+			else if (opcode->nn == 0xEE)
 				// Return from a subroutine.
 				// The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
 				PC = chip8->stack[SP];
@@ -332,13 +332,15 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					break;
 
 				case 6:
-					// Set Vx = Vx SHR 1.
-					// If the least - significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
+					// Set VX equal to VX bitshifted right 1. 
+					// VF is set to the least significant bit of VX prior to the shift
+					
 					if ((chip8->v[opcode->x] & 1) == 1)
 						chip8->v[15] = 1;
 					else
 						chip8->v[15] = 0;
-					chip8->v[opcode->x] /= 2;
+					chip8->v[opcode->x] = chip8->v[opcode->x] >> 1;
+					break;
 
 				case 7:
 					// Set Vx = Vy - Vx, set VF = NOT borrow.
@@ -350,14 +352,14 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					chip8->v[opcode->x] = chip8->v[opcode->y] - chip8->v[opcode->x];
 					break;
 
-				case 14:  //E
-					// Set Vx = Vx SHL 1.
-					// If the most - significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
+				case 0xe:  //E
+					// Set VX equal to VX bitshifted left 1. 
+					// VF is set to the most significant bit of VX prior to the shift
 					if ((chip8->v[opcode->x] & 0b10000000) == 0b10000000)
 						chip8->v[15] = 1;
 					else
 						chip8->v[15] = 0;
-					chip8->v[opcode->x] *= 2;
+					chip8->v[opcode->x] = chip8->v[opcode->y] << 1;
 					break;
 			}
 	
@@ -381,9 +383,11 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			break;
 	
 		case 0xc: //C
-			//Set Vx = random byte AND kk.
-			// The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk.The results are stored in Vx.
+			//Set Vx = random byte AND nn.
+			// The interpreter generates a random number from 0 to 255, which is then ANDed with the value nn.The results are stored in Vx.
 			// See instruction 8xy2 for more information on AND.
+			srand((unsigned int)time(NULL));
+			chip8->v[opcode->x] = (rand() % 0xff) & (opcode->nn);
 			
 			break;
 
@@ -405,12 +409,13 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				{
 					for (int x = 0; x < 8; x++)
 					{
-						unsigned char xor = ((chip8->mem[chip8->I + y]) & mask) ^ (buffer[px + x][py + y]);
+						unsigned char mem = ((chip8->mem[chip8->I + y]) & mask) >> (7 - x);
+						unsigned char xor = mem ^ (buffer[px + x][py + y]);
 						
-						if((xor >= 1) & (buffer[px + x][py + y] == 1))
+						if((mem == 1) & (buffer[px + x][py + y] == 1))
 								chip8->v[15] = 1;
 		
-						buffer[px + x][py + y] = xor>>(7-x);
+						buffer[px + x][py + y] = xor;
 						mask = mask >> 1;				
 					}
 					mask = 128;
@@ -419,6 +424,18 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			}
 		
 		case 0xe: //E
+			if (opcode->nn == 0x9e)
+			{
+				// Skip next instruction if key with the value of Vx is pressed.
+				// Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
+
+			}
+			else  //(0xa1)
+			{
+				// Skip next instruction if key with the value of Vx is not pressed.
+				// Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
+			}
+
 
 			break;
 
@@ -468,7 +485,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					// and places the hundreds digit in memory at location in I, the tens digit at location I + 1, and the ones digit at location I + 2.
 					{
 					unsigned char BCD = chip8->v[opcode->x];
-					unsigned char location = chip8->I;
+					unsigned short location = chip8->I;
 					chip8->mem[location] = BCD / 100;
 					chip8->mem[location + 1] = (BCD % 100) /10;
 					chip8->mem[location + 2] = BCD % 10;

@@ -1,4 +1,9 @@
 #pragma once
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>    //for random seed
+#include "raylib.h"
+
 #define screenW 64
 #define screenH 32 
 #define MEM_SIZE 4096
