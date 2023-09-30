@@ -161,6 +161,7 @@ void loadRom(struct chip8_t *chip8,  const char* filename)
 		{
 			chip8->mem[MEM_PROGRAM_START + i] = fgetc(file);
 		}
+		fclose(file);
 	}
 }
 
