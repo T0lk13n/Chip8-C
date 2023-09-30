@@ -105,6 +105,7 @@ int main(void)
 void initChip8(struct chip8_t* chip8)
 {
 	ClearBackground(BLACK);
+	srand((unsigned int)time(NULL));
 
 	// Clear buffer
 	for (int y = 0; y < screenH; y++)
@@ -328,7 +329,6 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					// Set VX equal to VX bitshifted right 1. 
 					// VF is set to the least significant bit of VX prior to the shift
 					// VF: = VX & 0x01
-					//VX : = VX / 2
 					VF = VX & 1;
 
 					/*if ((VX & 1) == 1)
@@ -382,8 +382,8 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			//Set Vx = random byte AND nn.
 			// The interpreter generates a random number from 0 to 255, which is then ANDed with the value nn.The results are stored in Vx.
 			// See instruction 8xy2 for more information on AND.
-			srand((unsigned int)time(NULL));
-			VX = (rand() % 0xff) & (opcode->nn);		
+			
+			VX = (rand() % 0xff) & (opcode->nn);
 			break;
 
 		case 0xd: //D
