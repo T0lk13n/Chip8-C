@@ -522,7 +522,7 @@ void getInput()
 	else if (IsKeyPressed(KEY_UP))
 	{
 		fontSize++;
-		if (fontSize > 12) fontSize = 12;
+		if (fontSize > 20) fontSize = 20;
 		SetWindowSize(screenW * fontSize, screenH * fontSize);
 		//puts("x");
 	}

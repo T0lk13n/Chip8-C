@@ -18,7 +18,7 @@
 #define VY chip8->v[opcode->y]
 #define VF chip8->v[15]
 
-int fontSize = 8;
+int fontSize = 12;
 // buffer pintado
 unsigned char buffer[64][32];
 
