@@ -307,11 +307,10 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					// The values of Vx and Vy are added together.If the result is greater than 8 bits(i.e., > 255, ) VF is set to 1, otherwise 0. 
 					// Only the lowest 8 bits of the result are kept, and stored in Vx.
 					{
+						VF = 0;
 						int overflow = VX + VY;
 						if (overflow > 255)
 							VF = 1;
-						else
-							VF = 0;
 						VX = overflow & 0xff;
 						break;
 					}
@@ -319,11 +318,10 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				case 5:
 					// Set Vx = Vx - Vy, set VF = NOT borrow.
 					// If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
+					VF = 0;
 					if (VX > VY)
 						VF = 1;
-					else
-						VF = 0;
-					VX -= VY & 0xff;
+					VX -= VY;
 					break;
 
 				case 6:
@@ -343,23 +341,21 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				case 7:
 					// Set Vx = Vy - Vx, set VF = NOT borrow.
 					// If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+					VF = 0;
 					if (VY > VX)
 						VF = 1;
-					else
-						VF = 0;
 					VX = VY - VX;
 					break;
 
 				case 0xe:  //E
 					// Set VX equal to VX bitshifted left 1. 
 					// VF is set to the most significant bit of VX prior to the shift
-					//VX = VY;
-
+			
+					VF = 0;
 					if ((VX & 0b10000000) == 0b10000000)
 						VF = 1;
-					else
-						VF = 0;
-					VX = VY << 1;
+
+					VX = VX << 1;
 					break;
 			}
 	
