@@ -27,7 +27,8 @@ int main(void)
 	//loadRom(chip8, "tests/c8_test.ch8");
 	//loadRom(chip8, "chip8-roms/games/airplane.ch8");
 	//loadRom(chip8, "chip8-roms/games/cave.ch8");
-	loadRom(chip8, "chip8-roms/programs/ibm logo.ch8");
+	loadRom(chip8, "chip8-roms/games/pong (alt).ch8");
+	//loadRom(chip8, "chip8-roms/programs/ibm logo.ch8");
 
 	//--------------------------------------------------------------------------------------
 	// Main game loop
@@ -367,26 +368,26 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				PC += 2;
 			break;
 
-		case 10: //A
+		case 0xa: //A
 			// Set I = nnn.
 			// The value of register I is set to nnn.
 			chip8->I = opcode->nnn;
 			break;
 
-		case 11: //B
+		case 0xb: //B
 			// Jump to location nnn + V0.
 			// The program counter is set to nnn plus the value of V0.
 			PC = opcode->nnn + chip8->v[0];
 			break;
 	
-		case 12: //C
+		case 0xc: //C
 			//Set Vx = random byte AND kk.
 			// The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk.The results are stored in Vx.
 			// See instruction 8xy2 for more information on AND.
 			
 			break;
 
-		case 13: //D
+		case 0xd: //D
 			// Display n - byte sprite starting at memory location I at(Vx, Vy), set VF = collision.
 			// The interpreter reads n bytes from memory, starting at the address stored in I.These bytes are then displayed as sprites on screen at coordinates(Vx, Vy).
 			// Sprites are XORed onto the existing screen.If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0. 
@@ -417,11 +418,11 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				break;
 			}
 		
-		case 14: //E
+		case 0xe: //E
 
 			break;
 
-		case 15: //F
+		case 0xf: //F
 
 			switch (opcode->nn)
 			{
@@ -431,50 +432,57 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					chip8->v[opcode->x] = chip8->delayTimer;
 					break;
 
-				case 10: //0A
+				case 0x0a: //0A
 					// Wait for a key press, store the value of the key in Vx.
 					// All execution stops until a key is pressed, then the value of that key is stored in Vx.
 					break;
 
-				case 21: //15
+				case 0x15: //15
 					// Set delay timer = Vx.
 					// DT is set equal to the value of Vx.
 					chip8->delayTimer = chip8->v[opcode->x];
 					break;
 
-				case 24: //18
+				case 0x18: //18
 					// Set sound timer = Vx.
 					// ST is set equal to the value of Vx.
 					chip8->soundTimer = chip8->v[opcode->x];
 					break;
 
-				case 30: //1E
+				case 0x1e: //1E
 					// Set I = I + Vx.
 					// The values of I and Vx are added, and the results are stored in I.
 					chip8->I += chip8->v[opcode->x];
 					break;
 
-				case 41: //29
+				case 0x29: //29
 					// Set I = location of sprite for digit Vx.
 					// The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
 					// See section 2.4, Display, for more information on the Chip - 8 hexadecimal font.
-					chip8->I = chip8->v[opcode->x] & 0x0f;
+					chip8->I = FONTS_ADDR + chip8->v[opcode->x]; // &0x0f;
 					break;
 
-				case 51: //33
+				case 0x33: //33
 					// Store BCD representation of Vx in memory locations I, I + 1, and I + 2.
 					// The interpreter takes the decimal value of Vx,
 					// and places the hundreds digit in memory at location in I, the tens digit at location I + 1, and the ones digit at location I + 2.
+					{
+					unsigned char BCD = chip8->v[opcode->x];
+					unsigned char location = chip8->I;
+					chip8->mem[location] = BCD / 100;
+					chip8->mem[location + 1] = (BCD % 100) /10;
+					chip8->mem[location + 2] = BCD % 10;
+					}
 					break;
 
-				case 85: //55
+				case 0x55: //55
 					// Store registers V0 through Vx in memory starting at location I.
 					// The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
 					for (int i = 0; i < opcode->x; i++)
 						chip8->mem[chip8->I+i] = chip8->v[i];
 					break;
 				
-				case 101: //65
+				case 0x65: //65
 					// Read registers V0 through Vx from memory starting at location I.
 					// The interpreter reads values from memory starting at location I into registers V0 through Vx.
 					for (int i = 0; i < opcode->x; i++)
