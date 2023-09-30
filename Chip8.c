@@ -283,7 +283,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					// Performs a bitwise OR on the values of Vx and Vy, 
 					// then stores the result in Vx.A bitwise OR compares the corrseponding bits from two values, 
 					// and if either bit is 1, then the same bit in the result is also 1. Otherwise, it is 0.
-					VX = VX | VY;
+					VX |= VY;
 					break;
 
 				case 2:
@@ -291,7 +291,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					// Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx.
 					// A bitwise AND compares the corrseponding bits from two values, and if both bits are 1, 
 					// then the same bit in the result is also 1. Otherwise, it is 0.
-					VX = VX & VY;
+					VX &= VY;
 					break;
 
 				case 3:
@@ -299,7 +299,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					// Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx.
 					// An exclusive OR compares the corrseponding bits from two values, and if the bits are not both the same, 
 					// then the corresponding bit in the result is set to 1. Otherwise, it is 0.
-					VX = VX ^ VY;
+					VX ^= VY;
 					break;
 				
 				case 4:
