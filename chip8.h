@@ -14,6 +14,9 @@
 #define PC chip8->pc
 #define SP chip8->sp
 #define CURRENTOPCODE (chip8->mem[PC] << 8 | chip8->mem[PC+1])
+#define VX chip8->v[opcode->x]
+#define VY chip8->v[opcode->y]
+#define VF chip8->v[15]
 
 int fontSize = 8;
 // buffer pintado
