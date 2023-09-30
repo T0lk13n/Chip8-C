@@ -468,6 +468,8 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				case 0x1e: //1E
 					// Set I = I + Vx.
 					// The values of I and Vx are added, and the results are stored in I.
+					//Check carry I?
+					VF = (chip8->I + VX) > 0x0fff;
 					chip8->I += VX;
 					break;
 
