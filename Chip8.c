@@ -17,12 +17,21 @@ int main(void)
 	struct opcode_t* opcode= (struct opcode_t*)malloc(sizeof(struct opcode_t));
 
 	initChip8(chip8);
+
+	// https://github.com/Timendus/chip8-test-suite
+	//loadRom(chip8, "tests/1-chip8-logo.ch8");
+	//loadRom(chip8, "tests/2-ibm-logo.ch8");
+	//loadRom(chip8, "tests/3-corax+.ch8");
+	//loadRom(chip8, "tests/4-flags.ch8");
+	//loadRom(chip8, "tests/5-quirks.ch8");
+	//loadRom(chip8, "tests/6-keypad.ch8");
+	
 	//loadRom(chip8, "tests/test_opcode.ch8");
-	 //loadRom(chip8, "tests/sctest.ch8");
+	//loadRom(chip8, "tests/sctest.ch8");
 	//loadRom(chip8, "tests/c8_test.ch8");
 	//loadRom(chip8, "chip8-roms/games/airplane.ch8");
-	//loadRom(chip8, "chip8-roms/games/cave.ch8");
-	loadRom(chip8, "chip8-roms/games/pong (alt).ch8");
+	loadRom(chip8, "chip8-roms/games/cave.ch8");
+	//loadRom(chip8, "chip8-roms/games/pong (alt).ch8");
 	//loadRom(chip8, "chip8-roms/programs/ibm logo.ch8");
 
 	//--------------------------------------------------------------------------------------
@@ -38,22 +47,7 @@ int main(void)
 			UnloadDroppedFiles(dropedFiles);
 		}
 
-		//ZOOM
-		if (IsKeyPressed(KEY_Z))
-		{
-			fontSize--;
-			if (fontSize < 1) fontSize = 1;
-			SetWindowSize(screenW * fontSize, screenH * fontSize);
-			// puts("z");
-		}
-		else if (IsKeyPressed(KEY_X))
-		{
-			fontSize++;
-			if (fontSize > 10) fontSize = 10;
-			SetWindowSize(screenW * fontSize, screenH * fontSize);
-			//puts("x");
-		}
-
+		getInput();
 
 		int numOpcodes = 0;
 		while (numOpcodes < OPCODESPERFRAME)
@@ -328,13 +322,14 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 						chip8->v[15] = 1;
 					else
 						chip8->v[15] = 0;
-					chip8->v[opcode->x] -= chip8->v[opcode->y];
+					chip8->v[opcode->x] -= chip8->v[opcode->y] & 0xff;
 					break;
 
 				case 6:
 					// Set VX equal to VX bitshifted right 1. 
 					// VF is set to the least significant bit of VX prior to the shift
-					
+					//chip8->v[opcode->x] = chip8->v[opcode->y];
+
 					if ((chip8->v[opcode->x] & 1) == 1)
 						chip8->v[15] = 1;
 					else
@@ -355,6 +350,8 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				case 0xe:  //E
 					// Set VX equal to VX bitshifted left 1. 
 					// VF is set to the most significant bit of VX prior to the shift
+					//chip8->v[opcode->x] = chip8->v[opcode->y];
+
 					if ((chip8->v[opcode->x] & 0b10000000) == 0b10000000)
 						chip8->v[15] = 1;
 					else
@@ -387,8 +384,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			// The interpreter generates a random number from 0 to 255, which is then ANDed with the value nn.The results are stored in Vx.
 			// See instruction 8xy2 for more information on AND.
 			srand((unsigned int)time(NULL));
-			chip8->v[opcode->x] = (rand() % 0xff) & (opcode->nn);
-			
+			chip8->v[opcode->x] = (rand() % 0xff) & (opcode->nn);		
 			break;
 
 		case 0xd: //D
@@ -424,23 +420,24 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			}
 		
 		case 0xe: //E
+			//printf("Key: %d\n opcode:%d\n", keyPressed, chip8->v[opcode->x]);
 			if (opcode->nn == 0x9e)
 			{
 				// Skip next instruction if key with the value of Vx is pressed.
 				// Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
-
+				if (IsKeyDown(keys[chip8->v[opcode->x]]))
+					PC += 2;
 			}
-			else  //(0xa1)
+			else  if(opcode->nn == 0xa1) //(0xa1)
 			{
 				// Skip next instruction if key with the value of Vx is not pressed.
 				// Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
+				if(!IsKeyDown(keys[chip8->v[opcode->x]]) )
+					PC += 2;
 			}
-
-
 			break;
 
 		case 0xf: //F
-
 			switch (opcode->nn)
 			{
 				case 07:
@@ -495,18 +492,37 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				case 0x55: //55
 					// Store registers V0 through Vx in memory starting at location I.
 					// The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
-					for (int i = 0; i < opcode->x; i++)
+					for (int i = 0; i <= opcode->x; i++)
 						chip8->mem[chip8->I+i] = chip8->v[i];
 					break;
 				
 				case 0x65: //65
 					// Read registers V0 through Vx from memory starting at location I.
 					// The interpreter reads values from memory starting at location I into registers V0 through Vx.
-					for (int i = 0; i < opcode->x; i++)
+					for (int i = 0; i <= opcode->x; i++)
 						chip8->v[i] = chip8->mem[chip8->I + i];
 					break;
 			}
-
 			break;
+	}
+}
+
+
+void getInput()
+{
+	//ZOOM
+	if (IsKeyPressed(KEY_DOWN))
+	{
+		fontSize--;
+		if (fontSize < 1) fontSize = 1;
+		SetWindowSize(screenW * fontSize, screenH * fontSize);
+		// puts("z");
+	}
+	else if (IsKeyPressed(KEY_UP))
+	{
+		fontSize++;
+		if (fontSize > 10) fontSize = 10;
+		SetWindowSize(screenW * fontSize, screenH * fontSize);
+		//puts("x");
 	}
 }

@@ -15,9 +15,33 @@
 #define SP chip8->sp
 #define CURRENTOPCODE (chip8->mem[PC] << 8 | chip8->mem[PC+1])
 
-int fontSize = 4;
+int fontSize = 8;
 // buffer pintado
 unsigned char buffer[64][32];
+
+unsigned int keys[]=
+{
+	KEY_X,
+	KEY_ONE,	//1
+	KEY_TWO,	//2
+	KEY_THREE,	//3
+
+	KEY_Q,
+	KEY_W,
+	KEY_E,
+	KEY_A,
+
+	KEY_S,
+	KEY_D,
+	KEY_Z,
+	KEY_C,
+
+	KEY_FOUR,	//...
+	KEY_R,
+	KEY_F,
+	KEY_V
+};
+
 
 // *************************************************
 //	Internal Font data	8x5 pixeles
@@ -70,3 +94,4 @@ void initChip8(struct chip8_t *chip8);
 void loadRom(struct chip8_t *chip8, const char* filename);
 void getOpcode(struct chip8_t *chip8, struct opcode_t *opcode);
 void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode);
+void getInput();
