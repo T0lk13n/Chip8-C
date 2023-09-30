@@ -473,7 +473,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					// Set I = location of sprite for digit Vx.
 					// The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
 					// See section 2.4, Display, for more information on the Chip - 8 hexadecimal font.
-					chip8->I = FONTS_ADDR + chip8->v[opcode->x]; // &0x0f;
+					chip8->I = FONTS_ADDR + (chip8->v[opcode->x]*5); // &0x0f;
 					break;
 
 				case 0x33: //33
