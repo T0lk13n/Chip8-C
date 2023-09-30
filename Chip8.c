@@ -89,6 +89,8 @@ int main(void)
 				if (buffer[x][y] == 1)
 					//DrawPixel(x, y, WHITE);
 					DrawRectangle((x * fontSize), (y * fontSize), fontSize, fontSize, WHITE);
+				else
+					DrawRectangle((x * fontSize), (y * fontSize), fontSize, fontSize, BLACK);
 			}
 		}
 
@@ -209,7 +211,14 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			// 00E0 : Clear screen
 			// 00EE - RET
 			if (opcode->nn == 0xE0)
-				ClearBackground(BLACK);
+				//ClearBackground(BLACK);
+				for (int y = 0; y < screenH; y++)
+				{
+					for (int x = 0; x < screenW; x++)
+					{
+						buffer[x][y] = 0;					
+					}
+				}
 			else
 				// Return from a subroutine.
 				// The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
@@ -395,18 +404,19 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 				{
 					for (int x = 0; x < 8; x++)
 					{
-						if((chip8->mem[chip8->I + y] & mask) == mask)
-							buffer[px + x][py + y] = 1;
-						else
-							buffer[px + x][py + y] = 0;
-						mask = mask >> 1;
-				
+						unsigned char xor = ((chip8->mem[chip8->I + y]) & mask) ^ (buffer[px + x][py + y]);
+						
+						if((xor >= 1) & (buffer[px + x][py + y] == 1))
+								chip8->v[15] = 1;
+		
+						buffer[px + x][py + y] = xor>>(7-x);
+						mask = mask >> 1;				
 					}
 					mask = 128;
 				}
 				break;
 			}
-
+		
 		case 14: //E
 
 			break;

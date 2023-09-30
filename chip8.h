@@ -12,7 +12,7 @@
 
 int fontSize = 4;
 // buffer pintado
-char buffer[64][32];
+unsigned char buffer[64][32];
 
 // *************************************************
 //	Internal Font data	8x5 pixeles
