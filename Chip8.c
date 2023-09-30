@@ -358,7 +358,8 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 					VX = VX << 1;
 					break;
 			}
-	
+			break;	//case 8
+
 		case 9:
 			// Skip next instruction if Vx != Vy.
 			// The values of Vx and Vy are compared, and if they are not equal, the program counter is increased by 2.
@@ -409,8 +410,7 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 						
 						if((mem == 1) & (buffer[px][py + y] == 1))
 								VF = 1;
-						
-						
+												
 						buffer[px][py + y] = xor;
 						mask = mask >> 1;				
 					}
