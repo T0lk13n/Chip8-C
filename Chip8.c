@@ -391,26 +391,27 @@ void decodeOpcode(struct chip8_t* chip8, struct opcode_t *opcode)
 			// The interpreter reads n bytes from memory, starting at the address stored in I.These bytes are then displayed as sprites on screen at coordinates(Vx, Vy).
 			// Sprites are XORed onto the existing screen.If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0. 
 			// If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen.
-			// See instruction 8xy3 for more information on XOR, and section 2.4, Display, for more information on the Chip - 8 screen and sprites.
 			{
 				VF = 0;
 				int mask = 128; //1000 0000 en binario
 				//int x = VX * fontSize;
 				//int y = VY * fontSize;
-				int px = VX;
+				int px = 0;
 				int py = VY;
 
 				for (int y = 0; y < opcode->n; y++)
 				{
 					for (int x = 0; x < 8; x++)
 					{
+						px = (VX + x) % screenW;
 						unsigned char mem = ((chip8->mem[chip8->I + y]) & mask) >> (7 - x);
-						unsigned char xor = mem ^ (buffer[px + x][py + y]);
+						unsigned char xor = mem ^ (buffer[px][py + y]);
 						
-						if((mem == 1) & (buffer[px + x][py + y] == 1))
+						if((mem == 1) & (buffer[px][py + y] == 1))
 								VF = 1;
-		
-						buffer[px + x][py + y] = xor;
+						
+						
+						buffer[px][py + y] = xor;
 						mask = mask >> 1;				
 					}
 					mask = 128;
