@@ -22,7 +22,7 @@ int fontSize = 12;
 // buffer pintado
 unsigned char buffer[64][32];
 
-unsigned int keys[]=
+const unsigned int keys[]=
 {
 	KEY_X,
 	KEY_ONE,	//1
@@ -49,7 +49,7 @@ unsigned int keys[]=
 // *************************************************
 //	Internal Font data	8x5 pixeles
 // *************************************************
-unsigned char fonts [16][5] =
+const unsigned char fonts [16][5] =
 {
 	{0xF0, 0x90, 0x90, 0x90, 0xF0},// 0
 	{0x20, 0x60, 0x20, 0x20, 0x70},// 1
