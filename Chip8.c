@@ -69,22 +69,17 @@ int main(void)
 		// Draw
 		//----------------------------------------------------------------------------------
 		BeginDrawing();
-		//ClearBackground(BLACK);
-
 		// Volcamos buffer
 		for (int y = 0; y < screenH; y++)
 		{
 			for (int x = 0; x < screenW; x++)
 			{
 				if (buffer[x][y] == 1)
-					//DrawPixel(x, y, WHITE);
 					DrawRectangle((x * fontSize), (y * fontSize), fontSize, fontSize, WHITE);
 				else
 					DrawRectangle((x * fontSize), (y * fontSize), fontSize, fontSize, BLACK);
 			}
 		}
-
-
 		EndDrawing();
 		//----------------------------------------------------------------------------------
 	}
@@ -153,7 +148,7 @@ void loadRom(struct chip8_t *chip8,  const char* filename)
 	//carga la rom en memoria a partir de MEM_PROGRAM_START
 	if(FileExists(filename))
 	{
-		int fileSize = GetFileLength(filename);
+		const int fileSize = GetFileLength(filename);
 		// chip8->mem = LoadFileData(filename, fileSize);
 		FILE* file = fopen(filename, "rb");
 		
@@ -517,13 +512,19 @@ void getInput()
 		fontSize--;
 		if (fontSize < 1) fontSize = 1;
 		SetWindowSize(screenW * fontSize, screenH * fontSize);
-		// puts("z");
 	}
 	else if (IsKeyPressed(KEY_UP))
 	{
 		fontSize++;
 		if (fontSize > 20) fontSize = 20;
 		SetWindowSize(screenW * fontSize, screenH * fontSize);
-		//puts("x");
+	}
+	else if (IsKeyPressed(KEY_D))
+	{
+		puts("DEBUGGER");
+	}
+	else if (IsKeyPressed(KEY_K))
+	{
+		puts("KEYBOARD");
 	}
 }
