@@ -148,7 +148,7 @@ void loadRom(struct chip8_t *chip8,  const char* filename)
 	//carga la rom en memoria a partir de MEM_PROGRAM_START
 	if(FileExists(filename))
 	{
-		const int fileSize = GetFileLength(filename);
+		int fileSize = GetFileLength(filename);
 		// chip8->mem = LoadFileData(filename, fileSize);
 		FILE* file = fopen(filename, "rb");
 		
@@ -519,7 +519,7 @@ void getInput()
 		if (fontSize > 20) fontSize = 20;
 		SetWindowSize(screenW * fontSize, screenH * fontSize);
 	}
-	else if (IsKeyPressed(KEY_D))
+	else if (IsKeyPressed(KEY_J))
 	{
 		puts("DEBUGGER");
 	}
